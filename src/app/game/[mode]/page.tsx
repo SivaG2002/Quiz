@@ -1,14 +1,14 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
-import React, { Suspense } from 'react';
+import React from 'react';
 
 const validModes = [
   'addition',
