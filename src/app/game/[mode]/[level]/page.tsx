@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -59,9 +60,9 @@ export default function GamePage({ params }: { params: { mode: string; level: st
   const generateProblem = useCallback(() => {
     // Use a seed to make problems 'random but predictable' based on mode, level and problem count
     // This prevents hydration errors from Math.random()
-    const seed = simpleHash(`${mode}-${level}-${problemCount}`);
+    let seed = simpleHash(`${mode}-${level}-${problemCount}`);
     const random = () => {
-        let x = Math.sin(seed + problemCount) * 10000;
+        let x = Math.sin(seed++) * 10000;
         return x - Math.floor(x);
     };
 
@@ -232,7 +233,7 @@ export default function GamePage({ params }: { params: { mode: string; level: st
                             key={option}
                             onClick={() => handleAnswer(option)}
                             disabled={selectedOption !== null}
-                            className={cn("h-24 text-4xl font-bold transform transition-all", buttonColor)}
+                            className={cn("h-24 text-4xl font-bold transform transition-all", buttonColor, "hover:bg-primary/80")}
                         >
                             {option}
                         </Button>
