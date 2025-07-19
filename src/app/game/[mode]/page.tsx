@@ -1,13 +1,14 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, use } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { notFound, useRouter } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
+import React, { Suspense } from 'react';
 
 const validModes = [
   'addition',
@@ -32,10 +33,8 @@ function getGameTitle(mode: string) {
   }
 }
 
-export default function GameModePage({ params }: { params: { mode: string } }) {
-  const { mode } = params;
+function GameModePage({ mode }: { mode: string }) {
   const [limit, setLimit] = useState(15);
-  const router = useRouter();
 
   if (!validModes.includes(mode)) {
     notFound();
@@ -106,4 +105,19 @@ export default function GameModePage({ params }: { params: { mode: string } }) {
       </Card>
     </main>
   );
+}
+
+function GameModePageWrapper({ params }: { params: { mode: string } }) {
+    const { mode } = params;
+    return <GameModePage mode={mode} />;
+}
+
+export default function GameModeLoader(props: any) {
+    const params = use(Promise.resolve(props.params));
+    
+    return (
+        <Suspense fallback={<main className="flex min-h-screen flex-col items-center justify-center p-8"><p>Loading...</p></main>}>
+            <GameModePageWrapper params={params} />
+        </Suspense>
+    )
 }
