@@ -32,17 +32,37 @@ export default function UserProfile({ showName = false }: { showName?: boolean }
   const [inputValue, setInputValue] = useState("");
   const { toast } = useToast();
 
-  useEffect(() => {
+  const updateUsernameFromStorage = () => {
     const storedUsername = localStorage.getItem(USERNAME_KEY);
     const currentUsername = storedUsername || DEFAULT_USERNAME;
     setUsername(currentUsername);
     setInputValue(currentUsername === DEFAULT_USERNAME ? "" : currentUsername);
+  };
+  
+  useEffect(() => {
+    updateUsernameFromStorage();
+    
+    // Listen for changes to localStorage from other tabs/windows
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === USERNAME_KEY) {
+        updateUsernameFromStorage();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    // Clean up the event listener when the component unmounts
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const handleSave = () => {
     if (inputValue.trim()) {
       const newUsername = inputValue.trim();
+      // This will trigger the 'storage' event in other tabs
       localStorage.setItem(USERNAME_KEY, newUsername);
+      // Manually update the state for the current tab
       setUsername(newUsername);
       toast({
         title: "Success",
