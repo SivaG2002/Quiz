@@ -2,16 +2,13 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { notFound, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Home } from 'lucide-react';
-
-const validModes = ['addition', 'subtraction', 'multiplication', 'squared', 'cubes', 'square-roots'];
-const validLevels = ['test', 'competitive'];
 
 const GAME_DURATION = 60; // seconds
 
@@ -45,10 +42,7 @@ function simpleHash(str: string) {
 }
 
 
-export default function GamePage({ params }: { params: { mode: string; level: string } }) {
-  const { mode, level } = params;
-  const router = useRouter();
-
+function GamePage({ mode, level }: { mode: string; level: string }) {
   const [problem, setProblem] = useState<Problem | null>(null);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
@@ -119,10 +113,8 @@ export default function GamePage({ params }: { params: { mode: string; level: st
 
 
   useEffect(() => {
-    if (validModes.includes(mode) && validLevels.includes(level)) {
-        generateProblem();
-    }
-  }, [mode, level]); // Only run once on mount if mode/level are valid
+    generateProblem();
+  }, []); // Only run once on mount
 
   useEffect(() => {
     if (level !== 'competitive' || !isGameActive) return;
@@ -159,10 +151,6 @@ export default function GamePage({ params }: { params: { mode: string; level: st
     }, correct ? 500 : 1000);
   };
   
-  if (!validModes.includes(mode) || !validLevels.includes(level)) {
-    notFound();
-  }
-
   const title = `${getGameTitle(mode)} - ${level === 'competitive' ? 'Competitive' : 'Test'} Level`;
 
   if (!isGameActive) {
@@ -245,4 +233,26 @@ export default function GamePage({ params }: { params: { mode: string; level: st
       </Card>
     </main>
   );
+}
+
+// This is a new Server Component wrapper
+import { use, Suspense } from 'react';
+import { notFound } from 'next/navigation';
+
+const validModes = ['addition', 'subtraction', 'multiplication', 'squared', 'cubes', 'square-roots'];
+const validLevels = ['test', 'competitive'];
+
+export default function GamePageLoader({ params }: { params: Promise<{ mode: string; level: string }> }) {
+  const resolvedParams = use(params);
+  const { mode, level } = resolvedParams;
+
+  if (!validModes.includes(mode) || !validLevels.includes(level)) {
+    notFound();
+  }
+  
+  return (
+    <Suspense fallback={<main className="flex min-h-screen flex-col items-center justify-center p-8"><p>Loading...</p></main>}>
+        <GamePage mode={mode} level={level} />
+    </Suspense>
+  )
 }
