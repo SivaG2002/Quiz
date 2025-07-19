@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Tooltip,
@@ -22,6 +21,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import Image from 'next/image';
 
 const USERNAME_KEY = "mathverse-username";
 
@@ -32,7 +32,6 @@ export default function UserProfile() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // This code runs only on the client, so localStorage is safe to use.
     const storedUsername = localStorage.getItem(USERNAME_KEY);
     if (storedUsername) {
       setUsername(storedUsername);
@@ -64,8 +63,15 @@ export default function UserProfile() {
         <Tooltip>
           <TooltipTrigger asChild>
             <DialogTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <User className="h-6 w-6" />
+              <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                <Image
+                  src="https://placehold.co/40x40.png"
+                  alt="User Profile"
+                  data-ai-hint="user avatar"
+                  className="rounded-full"
+                  width={40}
+                  height={40}
+                />
                 <span className="sr-only">Set User Name</span>
               </Button>
             </DialogTrigger>

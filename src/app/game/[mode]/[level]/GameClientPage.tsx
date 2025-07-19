@@ -242,8 +242,8 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
     <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
       <Card className="w-full max-w-2xl">
         <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-2xl font-headline">{title}</CardTitle>
+          <div className="flex justify-between items-start">
+            <CardTitle className="text-2xl font-headline pt-2">{title}</CardTitle>
             <div className='flex items-center gap-4'>
                 {level === 'competitive' && (
                     <div className={cn("text-2xl font-bold border-4 rounded-full size-20 flex items-center justify-center transition-colors", timerColor)}>

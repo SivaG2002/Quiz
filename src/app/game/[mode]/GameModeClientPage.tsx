@@ -54,7 +54,7 @@ export default function GameModeClientPage({ mode }: { mode: string }) {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
       <Card className="w-full max-w-2xl relative">
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-4 right-4 z-10">
           <UserProfile />
         </div>
         <CardHeader>
