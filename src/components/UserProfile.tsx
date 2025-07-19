@@ -24,25 +24,26 @@ import {
 import Image from 'next/image';
 
 const USERNAME_KEY = "mathverse-username";
+const DEFAULT_USERNAME = "Guest";
 
 export default function UserProfile() {
   const [isOpen, setIsOpen] = useState(false);
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(DEFAULT_USERNAME);
   const [inputValue, setInputValue] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
     const storedUsername = localStorage.getItem(USERNAME_KEY);
-    if (storedUsername) {
-      setUsername(storedUsername);
-      setInputValue(storedUsername);
-    }
+    const currentUsername = storedUsername || DEFAULT_USERNAME;
+    setUsername(currentUsername);
+    setInputValue(currentUsername === DEFAULT_USERNAME ? "" : currentUsername);
   }, []);
 
   const handleSave = () => {
     if (inputValue.trim()) {
-      localStorage.setItem(USERNAME_KEY, inputValue.trim());
-      setUsername(inputValue.trim());
+      const newUsername = inputValue.trim();
+      localStorage.setItem(USERNAME_KEY, newUsername);
+      setUsername(newUsername);
       toast({
         title: "Success",
         description: "Your name has been saved.",
@@ -56,9 +57,17 @@ export default function UserProfile() {
         });
     }
   };
+  
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
+      const storedUsername = localStorage.getItem(USERNAME_KEY) || "";
+      setInputValue(storedUsername);
+    }
+    setIsOpen(open);
+  }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -77,7 +86,7 @@ export default function UserProfile() {
             </DialogTrigger>
           </TooltipTrigger>
           <TooltipContent>
-            <p>{username ? `Logged in as ${username}` : 'Set User Name'}</p>
+            <p>Logged in as {username}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -99,6 +108,7 @@ export default function UserProfile() {
               onChange={(e) => setInputValue(e.target.value)}
               className="col-span-3"
               autoComplete="name"
+              placeholder="Enter your name"
             />
           </div>
         </div>

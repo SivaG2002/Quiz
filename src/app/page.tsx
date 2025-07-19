@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import UserProfile from '@/components/UserProfile';
 
 const gameModes = [
   { name: 'Addition', href: '/game/addition' },
@@ -49,6 +50,9 @@ export default function Home() {
 
   return (
     <div className="bg-background">
+      <div className="absolute top-4 right-4 z-10">
+        <UserProfile />
+      </div>
       <section className="flex flex-col items-center justify-center w-full h-screen text-center relative p-4">
         <div className="flex flex-col items-center gap-6">
             <h1 className="text-6xl md:text-8xl lg:text-9xl font-bold font-headline bg-gradient-to-r from-black to-[hsl(var(--primary))] text-transparent bg-clip-text py-2">
@@ -96,5 +100,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
