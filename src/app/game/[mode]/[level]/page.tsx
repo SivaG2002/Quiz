@@ -42,8 +42,7 @@ function simpleHash(str: string) {
     return hash;
 }
 
-
-function GamePage({ mode, level }: { mode: string, level: string }) {
+function GameClientPage({ mode, level }: { mode: string, level: string }) {
   const searchParams = useSearchParams();
   const limitParam = searchParams.get('limit');
   const limit = limitParam ? parseInt(limitParam, 10) : 15;
@@ -121,8 +120,9 @@ function GamePage({ mode, level }: { mode: string, level: string }) {
 
 
   useEffect(() => {
+    if(!isGameActive) return;
     generateProblem();
-  }, [generateProblem]); 
+  }, [isGameActive]); 
 
   useEffect(() => {
     if (level !== 'competitive' || !isGameActive) return;
@@ -251,10 +251,11 @@ function GamePage({ mode, level }: { mode: string, level: string }) {
 }
 
 // This is the new Server Component wrapper
-export default function GamePageLoader({ params }: { params: { mode: string, level: string } }) {
+export default function GamePage({ params }: { params: { mode: string, level: string } }) {
+  // Use a Suspense boundary to handle the client component's async dependencies (useSearchParams)
   return (
     <Suspense fallback={<main className="flex min-h-screen flex-col items-center justify-center p-8"><p>Loading...</p></main>}>
-        <GamePage mode={params.mode} level={params.level} />
+        <GameClientPage mode={params.mode} level={params.level} />
     </Suspense>
-  )
+  );
 }

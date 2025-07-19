@@ -1,10 +1,10 @@
 
 "use client";
 
-import { useState, Suspense } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { notFound, useRouter } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
@@ -33,7 +33,7 @@ function getGameTitle(mode: string) {
   }
 }
 
-function GameModePage({ mode }: { mode: string }) {
+function GameModeClientPage({ mode }: { mode: string }) {
   const [limit, setLimit] = useState(15);
 
   if (!validModes.includes(mode)) {
@@ -109,12 +109,7 @@ function GameModePage({ mode }: { mode: string }) {
   );
 }
 
-
 // This is the new Server Component wrapper
-export default function GameModeLoader({ params }: { params: { mode: string } }) {
-    return (
-        <Suspense fallback={<main className="flex min-h-screen flex-col items-center justify-center p-8"><p>Loading...</p></main>}>
-            <GameModePage mode={params.mode} />
-        </Suspense>
-    )
+export default function GameModePage({ params }: { params: { mode: string } }) {
+  return <GameModeClientPage mode={params.mode} />;
 }
