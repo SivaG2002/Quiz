@@ -4,7 +4,7 @@
 import { useState, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { notFound } from 'next/navigation';
+import { notFound, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
@@ -58,9 +58,11 @@ function GameModePage({ mode }: { mode: string }) {
             {getGameTitle(mode)} Challenge
           </CardTitle>
           {isCustomizable && (
-             <CardDescription className="text-center pt-2">
-                Use the slider to set the maximum number for the problems.
-             </CardDescription>
+            <div className="pt-2">
+                 <CardDescription className="text-center">
+                    Use the slider to set the maximum number for the problems.
+                 </CardDescription>
+            </div>
           )}
         </CardHeader>
         <CardContent>
