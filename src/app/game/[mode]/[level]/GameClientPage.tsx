@@ -58,32 +58,6 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
   const nextProblemTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const testModeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const goToNextProblem = useCallback(() => {
-     if (isGameActive) {
-        generateProblem();
-     }
-  }, [isGameActive, generateProblem]);
-
-  const handleAnswer = useCallback((option: number, timedOut = false) => {
-    if (selectedOption !== null || !problem) return; // Add guard clause here
-    if (testModeTimeoutRef.current) clearTimeout(testModeTimeoutRef.current);
-    
-    const correct = option === problem.answer;
-    
-    setSelectedOption(option);
-    setIsCorrect(correct);
-
-    if (correct && !timedOut) {
-      setScore(s => s + 1);
-    }
-    
-    const delay = correct ? 500 : 1000;
-    const timeoutDuration = timedOut ? 1500 : delay;
-
-    nextProblemTimeoutRef.current = setTimeout(goToNextProblem, timeoutDuration);
-  }, [selectedOption, problem, goToNextProblem]);
-
-
   const generateProblem = useCallback(() => {
     let seed = simpleHash(`${mode}-${level}-${problemCount}-${limit}`);
     const random = () => {
@@ -148,6 +122,31 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
     setProblem({ question, options: Array.from(options).sort(() => random() - 0.5), answer });
     setProblemCount(prev => prev + 1);
   }, [mode, level, problemCount, limit]);
+
+  const goToNextProblem = useCallback(() => {
+     if (isGameActive) {
+        generateProblem();
+     }
+  }, [isGameActive, generateProblem]);
+
+  const handleAnswer = useCallback((option: number, timedOut = false) => {
+    if (selectedOption !== null || !problem) return; // Add guard clause here
+    if (testModeTimeoutRef.current) clearTimeout(testModeTimeoutRef.current);
+    
+    const correct = option === problem.answer;
+    
+    setSelectedOption(option);
+    setIsCorrect(correct);
+
+    if (correct && !timedOut) {
+      setScore(s => s + 1);
+    }
+    
+    const delay = correct ? 500 : 1000;
+    const timeoutDuration = timedOut ? 1500 : delay;
+
+    nextProblemTimeoutRef.current = setTimeout(goToNextProblem, timeoutDuration);
+  }, [selectedOption, problem, goToNextProblem]);
 
   useEffect(() => {
     if(!isGameActive) return;
