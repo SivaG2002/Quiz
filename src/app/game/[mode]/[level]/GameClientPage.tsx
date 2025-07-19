@@ -212,6 +212,8 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
             },
             body: JSON.stringify({ username, score }),
           });
+          
+          const responseData = await response.json();
 
           if (response.ok) {
             toast({
@@ -219,15 +221,14 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
               description: "Your score was sent successfully.",
             });
           } else {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to submit score');
+            throw new Error(responseData.error || 'Failed to submit score');
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error("Error submitting score:", error);
           toast({
             variant: "destructive",
             title: "Submission Failed",
-            description: "Could not send score to the server.",
+            description: error.message || "Could not send score to the server.",
           });
         }
       };
