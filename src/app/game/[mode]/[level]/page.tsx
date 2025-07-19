@@ -122,7 +122,7 @@ function GameClientPage({ mode, level }: { mode: string, level: string }) {
   useEffect(() => {
     if(!isGameActive) return;
     generateProblem();
-  }, [isGameActive]); 
+  }, [isGameActive, generateProblem]); 
 
   useEffect(() => {
     if (level !== 'competitive' || !isGameActive) return;
@@ -250,12 +250,15 @@ function GameClientPage({ mode, level }: { mode: string, level: string }) {
   );
 }
 
-// This is the new Server Component wrapper
-export default function GamePage({ params }: { params: { mode: string, level: string } }) {
-  // Use a Suspense boundary to handle the client component's async dependencies (useSearchParams)
+function GamePageWrapper({ params }: { params: { mode: string, level: string } }) {
   return (
     <Suspense fallback={<main className="flex min-h-screen flex-col items-center justify-center p-8"><p>Loading...</p></main>}>
         <GameClientPage mode={params.mode} level={params.level} />
     </Suspense>
   );
+}
+
+// This is the Server Component that correctly handles params
+export default function GamePage({ params }: { params: { mode: string, level: string } }) {
+  return <GamePageWrapper params={params} />;
 }
