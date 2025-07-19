@@ -122,7 +122,7 @@ function GameClientPage({ mode, level }: { mode: string, level: string }) {
   useEffect(() => {
     if(!isGameActive) return;
     generateProblem();
-  }, [isGameActive, generateProblem]); 
+  }, [isGameActive, score]); // Changed dependency to score to trigger new problem
 
   useEffect(() => {
     if (level !== 'competitive' || !isGameActive) return;
