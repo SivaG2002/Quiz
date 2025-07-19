@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Home } from 'lucide-react';
 import React from 'react';
+import UserProfile from '@/components/UserProfile';
 
 const GAME_DURATION = 60; // seconds
 const TEST_MODE_TIMEOUT = 5000; // 5 seconds
@@ -42,6 +43,8 @@ function simpleHash(str: string) {
     return hash;
 }
 
+
+
 function GameClientContent({ mode, level }: { mode: string, level: string }) {
   const searchParams = useSearchParams();
   const limitParam = searchParams.get('limit');
@@ -57,7 +60,7 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
   
   const nextProblemTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const testModeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
+  
   const generateProblem = useCallback(() => {
     let seed = simpleHash(`${mode}-${level}-${problemCount}-${limit}`);
     const random = () => {
@@ -130,7 +133,7 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
   }, [isGameActive, generateProblem]);
 
   const handleAnswer = useCallback((option: number, timedOut = false) => {
-    if (selectedOption !== null || !problem) return; // Add guard clause here
+    if (selectedOption !== null || !problem) return;
     if (testModeTimeoutRef.current) clearTimeout(testModeTimeoutRef.current);
     
     const correct = option === problem.answer;
@@ -148,11 +151,27 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
     nextProblemTimeoutRef.current = setTimeout(goToNextProblem, timeoutDuration);
   }, [selectedOption, problem, goToNextProblem]);
 
+
   useEffect(() => {
     if(!isGameActive) return;
     generateProblem();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isGameActive]);
+  
+  // Effect for test mode timeout
+  useEffect(() => {
+    if (level === 'test' && problem && isGameActive) {
+      if (testModeTimeoutRef.current) clearTimeout(testModeTimeoutRef.current);
+      testModeTimeoutRef.current = setTimeout(() => {
+        handleAnswer(NaN, true);
+      }, TEST_MODE_TIMEOUT);
+    }
+    
+    return () => {
+      if (testModeTimeoutRef.current) clearTimeout(testModeTimeoutRef.current);
+    }
+  }, [problem, level, isGameActive, handleAnswer]);
+
 
   useEffect(() => {
     if (level !== 'competitive' || !isGameActive) return;
@@ -168,20 +187,6 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
 
     return () => clearInterval(timer);
   }, [timeLeft, level, isGameActive]);
-  
-  // Effect for test mode timeout
-  useEffect(() => {
-    if (level === 'test' && problem && isGameActive) {
-      if (testModeTimeoutRef.current) clearTimeout(testModeTimeoutRef.current);
-      testModeTimeoutRef.current = setTimeout(() => {
-        handleAnswer(NaN, true); // Pass a special value to indicate a timeout
-      }, TEST_MODE_TIMEOUT);
-    }
-    
-    return () => {
-      if (testModeTimeoutRef.current) clearTimeout(testModeTimeoutRef.current);
-    }
-  }, [problem, level, isGameActive, handleAnswer]);
 
   useEffect(() => {
     return () => { // Cleanup timeouts on component unmount
@@ -237,13 +242,16 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
     <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
       <Card className="w-full max-w-2xl">
         <CardHeader>
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-start">
             <CardTitle className="text-2xl font-headline">{title}</CardTitle>
-            {level === 'competitive' && (
-                <div className={cn("text-2xl font-bold border-4 rounded-full size-20 flex items-center justify-center transition-colors", timerColor)}>
-                    {timeLeft}
-                </div>
-            )}
+            <div className='flex items-center gap-4'>
+                {level === 'competitive' && (
+                    <div className={cn("text-2xl font-bold border-4 rounded-full size-20 flex items-center justify-center transition-colors", timerColor)}>
+                        {timeLeft}
+                    </div>
+                )}
+                <UserProfile />
+            </div>
           </div>
           {level === 'competitive' && (
             <Progress value={(timeLeft / GAME_DURATION) * 100} className="mt-2" />

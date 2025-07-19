@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import React from 'react';
+import UserProfile from '@/components/UserProfile';
 
 const validModes = [
   'addition',
@@ -53,9 +54,12 @@ export default function GameModeClientPage({ mode }: { mode: string }) {
     <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
       <Card className="w-full max-w-2xl">
         <CardHeader>
-          <CardTitle className="text-3xl text-center font-headline">
-            {getGameTitle(mode)} Challenge
-          </CardTitle>
+          <div className="flex justify-between items-start">
+            <CardTitle className="text-3xl text-center font-headline">
+              {getGameTitle(mode)} Challenge
+            </CardTitle>
+            <UserProfile />
+          </div>
           {isCustomizable && (
             <div className="pt-2">
                  <CardDescription className="text-center">
