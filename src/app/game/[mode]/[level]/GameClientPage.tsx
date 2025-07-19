@@ -346,3 +346,5 @@ export default function GameClientPage({ mode, level }: { mode: string, level: s
     </Suspense>
   );
 }
+
+    
