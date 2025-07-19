@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Home } from 'lucide-react';
+import React, { Suspense } from 'react';
 
 const GAME_DURATION = 60; // seconds
 
@@ -42,7 +43,11 @@ function simpleHash(str: string) {
 }
 
 
-function GamePage({ mode, level, limit }: { mode: string; level: string, limit: number }) {
+function GamePage({ params, searchParams }: { params: { mode: string, level: string }, searchParams: { [key: string]: string | string[] | undefined } }) {
+  const { mode, level } = params;
+  const limitParam = searchParams?.limit;
+  const limit = typeof limitParam === 'string' ? parseInt(limitParam, 10) : 15;
+
   const [problem, setProblem] = useState<Problem | null>(null);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
@@ -159,6 +164,13 @@ function GamePage({ mode, level, limit }: { mode: string; level: string, limit: 
   
   const title = `${getGameTitle(mode)} - ${level === 'competitive' ? 'Competitive' : 'Test'} Level`;
 
+  const validModes = ['addition', 'subtraction', 'multiplication', 'squared', 'cubes', 'square-roots'];
+  const validLevels = ['test', 'competitive'];
+  if (!validModes.includes(mode) || !validLevels.includes(level)) {
+    notFound();
+  }
+
+
   if (!isGameActive) {
     return (
         <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
@@ -242,32 +254,10 @@ function GamePage({ mode, level, limit }: { mode: string; level: string, limit: 
 }
 
 // This is a new Server Component wrapper
-import React, { Suspense } from 'react';
-
-const validModes = ['addition', 'subtraction', 'multiplication', 'squared', 'cubes', 'square-roots'];
-const validLevels = ['test', 'competitive'];
-
-function GamePageWrapper({ params, searchParams }: { params: { mode: string, level: string }, searchParams: { [key: string]: string | string[] | undefined }}) {
-  const { mode, level } = params;
-
-  if (!validModes.includes(mode) || !validLevels.includes(level)) {
-    notFound();
-  }
-
-  const limitParam = searchParams?.limit;
-  const limit = typeof limitParam === 'string' ? parseInt(limitParam, 10) : 15;
-
-  return <GamePage mode={mode} level={level} limit={isNaN(limit) ? 15 : limit} />;
-}
-
-
 export default function GamePageLoader(props: any) {
-  const params = use(Promise.resolve(props.params));
-  const searchParams = use(Promise.resolve(props.searchParams));
-  
   return (
     <Suspense fallback={<main className="flex min-h-screen flex-col items-center justify-center p-8"><p>Loading...</p></main>}>
-        <GamePageWrapper params={params} searchParams={searchParams} />
+        <GamePage {...props} />
     </Suspense>
   )
 }
