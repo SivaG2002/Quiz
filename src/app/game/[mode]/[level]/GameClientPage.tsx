@@ -58,6 +58,32 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
   const nextProblemTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const testModeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  const goToNextProblem = useCallback(() => {
+     if (isGameActive) {
+        generateProblem();
+     }
+  }, [isGameActive, generateProblem]);
+
+  const handleAnswer = useCallback((option: number, timedOut = false) => {
+    if (selectedOption !== null || !problem) return; // Add guard clause here
+    if (testModeTimeoutRef.current) clearTimeout(testModeTimeoutRef.current);
+    
+    const correct = option === problem.answer;
+    
+    setSelectedOption(option);
+    setIsCorrect(correct);
+
+    if (correct && !timedOut) {
+      setScore(s => s + 1);
+    }
+    
+    const delay = correct ? 500 : 1000;
+    const timeoutDuration = timedOut ? 1500 : delay;
+
+    nextProblemTimeoutRef.current = setTimeout(goToNextProblem, timeoutDuration);
+  }, [selectedOption, problem, goToNextProblem]);
+
+
   const generateProblem = useCallback(() => {
     let seed = simpleHash(`${mode}-${level}-${problemCount}-${limit}`);
     const random = () => {
@@ -121,20 +147,7 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
     setIsCorrect(null);
     setProblem({ question, options: Array.from(options).sort(() => random() - 0.5), answer });
     setProblemCount(prev => prev + 1);
-
-    if (testModeTimeoutRef.current) clearTimeout(testModeTimeoutRef.current);
-    if (level === 'test') {
-      testModeTimeoutRef.current = setTimeout(() => {
-        handleAnswer(NaN, true); // Pass a special value to indicate a timeout
-      }, TEST_MODE_TIMEOUT);
-    }
   }, [mode, level, problemCount, limit]);
-
-  const goToNextProblem = useCallback(() => {
-     if (isGameActive) {
-        generateProblem();
-     }
-  }, [isGameActive, generateProblem]);
 
   useEffect(() => {
     if(!isGameActive) return;
@@ -157,29 +170,26 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
     return () => clearInterval(timer);
   }, [timeLeft, level, isGameActive]);
   
+  // Effect for test mode timeout
+  useEffect(() => {
+    if (level === 'test' && problem && isGameActive) {
+      if (testModeTimeoutRef.current) clearTimeout(testModeTimeoutRef.current);
+      testModeTimeoutRef.current = setTimeout(() => {
+        handleAnswer(NaN, true); // Pass a special value to indicate a timeout
+      }, TEST_MODE_TIMEOUT);
+    }
+    
+    return () => {
+      if (testModeTimeoutRef.current) clearTimeout(testModeTimeoutRef.current);
+    }
+  }, [problem, level, isGameActive, handleAnswer]);
+
   useEffect(() => {
     return () => { // Cleanup timeouts on component unmount
       if (nextProblemTimeoutRef.current) clearTimeout(nextProblemTimeoutRef.current);
       if (testModeTimeoutRef.current) clearTimeout(testModeTimeoutRef.current);
     }
   }, []);
-
-  const handleAnswer = (option: number, timedOut = false) => {
-    if (selectedOption !== null) return;
-    if (testModeTimeoutRef.current) clearTimeout(testModeTimeoutRef.current);
-    
-    const correct = option === problem!.answer;
-    
-    setSelectedOption(option);
-    setIsCorrect(correct);
-
-    if (correct && !timedOut) {
-      setScore(score + 1);
-    }
-
-    const delay = correct ? 500 : 1000;
-    nextProblemTimeoutRef.current = setTimeout(goToNextProblem, delay);
-  };
   
   const title = `${getGameTitle(mode)} - ${level === 'competitive' ? 'Competitive' : 'Test'} Level`;
 
