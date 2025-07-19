@@ -4,14 +4,15 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 const gameModes = [
-  { name: 'Addition' },
-  { name: 'Subtraction' },
-  { name: 'Multiplication' },
-  { name: 'Squared' },
-  { name: 'Cubes' },
-  { name: 'Square Roots' },
+  { name: 'Addition', href: '/game/addition' },
+  { name: 'Subtraction', href: '/game/subtraction' },
+  { name: 'Multiplication', href: '/game/multiplication' },
+  { name: 'Squared', href: '/game/squared' },
+  { name: 'Cubes', href: '/game/cubes' },
+  { name: 'Square Roots', href: '/game/square-roots' },
 ];
 
 export default function Home() {
@@ -77,13 +78,15 @@ export default function Home() {
                   )}
                   style={{ animationDelay: `${index * 150}ms`, animationFillMode: 'forwards' }}
                 >
-                  <Button
-                    variant="default"
-                    className="w-full h-28 text-3xl font-semibold shadow-lg rounded-xl transform transition-all duration-300 ease-out hover:scale-105 hover:shadow-primary/40 focus:scale-105 focus:shadow-primary/40"
-                    aria-label={`Start ${mode.name} game`}
-                  >
-                    {mode.name}
-                  </Button>
+                  <Link href={mode.href} passHref>
+                    <Button
+                      variant="default"
+                      className="w-full h-28 text-3xl font-semibold shadow-lg rounded-xl transform transition-all duration-300 ease-out hover:scale-105 hover:shadow-primary/40 focus:scale-105 focus:shadow-primary/40"
+                      aria-label={`Start ${mode.name} game`}
+                    >
+                      {mode.name}
+                    </Button>
+                  </Link>
                 </div>
               ))}
             </div>
