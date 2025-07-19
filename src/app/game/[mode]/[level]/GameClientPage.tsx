@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useCallback, Suspense, useRef } from 'react';
 import { notFound, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { Home } from 'lucide-react';
 import React from 'react';
 
 const GAME_DURATION = 60; // seconds
+const TEST_MODE_TIMEOUT = 5000; // 5 seconds
 
 interface Problem {
   question: string;
@@ -53,6 +54,9 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [problemCount, setProblemCount] = useState(0);
+  
+  const nextProblemTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const testModeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const generateProblem = useCallback(() => {
     let seed = simpleHash(`${mode}-${level}-${problemCount}-${limit}`);
@@ -112,17 +116,31 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
         options.add(option);
       }
     }
-
+    
+    setSelectedOption(null);
+    setIsCorrect(null);
     setProblem({ question, options: Array.from(options).sort(() => random() - 0.5), answer });
     setProblemCount(prev => prev + 1);
+
+    if (testModeTimeoutRef.current) clearTimeout(testModeTimeoutRef.current);
+    if (level === 'test') {
+      testModeTimeoutRef.current = setTimeout(() => {
+        handleAnswer(NaN, true); // Pass a special value to indicate a timeout
+      }, TEST_MODE_TIMEOUT);
+    }
   }, [mode, level, problemCount, limit]);
 
+  const goToNextProblem = useCallback(() => {
+     if (isGameActive) {
+        generateProblem();
+     }
+  }, [isGameActive, generateProblem]);
 
   useEffect(() => {
     if(!isGameActive) return;
     generateProblem();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isGameActive, score]);
+  }, [isGameActive]);
 
   useEffect(() => {
     if (level !== 'competitive' || !isGameActive) return;
@@ -138,25 +156,29 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
 
     return () => clearInterval(timer);
   }, [timeLeft, level, isGameActive]);
+  
+  useEffect(() => {
+    return () => { // Cleanup timeouts on component unmount
+      if (nextProblemTimeoutRef.current) clearTimeout(nextProblemTimeoutRef.current);
+      if (testModeTimeoutRef.current) clearTimeout(testModeTimeoutRef.current);
+    }
+  }, []);
 
-  const handleAnswer = (option: number) => {
+  const handleAnswer = (option: number, timedOut = false) => {
     if (selectedOption !== null) return;
-
-    setSelectedOption(option);
+    if (testModeTimeoutRef.current) clearTimeout(testModeTimeoutRef.current);
+    
     const correct = option === problem!.answer;
+    
+    setSelectedOption(option);
     setIsCorrect(correct);
 
-    if (correct) {
+    if (correct && !timedOut) {
       setScore(score + 1);
     }
 
-    setTimeout(() => {
-        setSelectedOption(null);
-        setIsCorrect(null);
-        if (isGameActive) {
-            generateProblem();
-        }
-    }, correct ? 500 : 1000);
+    const delay = correct ? 500 : 1000;
+    nextProblemTimeoutRef.current = setTimeout(goToNextProblem, delay);
   };
   
   const title = `${getGameTitle(mode)} - ${level === 'competitive' ? 'Competitive' : 'Test'} Level`;
@@ -226,16 +248,22 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
                 {problem.options.map((option) => {
                     const isSelected = selectedOption === option;
                     const isTheCorrectAnswer = problem.answer === option;
+                    const answerRevealed = selectedOption !== null;
 
-                    const buttonColor = isSelected
-                        ? (isCorrect ? 'bg-green-500/80 border-green-400' : 'bg-red-500/80 border-red-400')
-                        : (selectedOption !== null && isTheCorrectAnswer ? 'bg-green-500/80 border-green-400' : 'bg-secondary');
+                    let buttonColor = 'bg-secondary';
+                    if (answerRevealed) {
+                        if (isTheCorrectAnswer) {
+                            buttonColor = 'bg-green-500/80 border-green-400';
+                        } else if (isSelected) {
+                            buttonColor = 'bg-red-500/80 border-red-400';
+                        }
+                    }
 
                     return (
                         <Button
                             key={option}
                             onClick={() => handleAnswer(option)}
-                            disabled={selectedOption !== null}
+                            disabled={answerRevealed}
                             className={cn("h-24 text-4xl font-bold transform transition-all", buttonColor, "hover:bg-primary/80")}
                         >
                             {option}
