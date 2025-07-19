@@ -123,7 +123,7 @@ function GameClientPage({ mode, level }: { mode: string, level: string }) {
     if(!isGameActive) return;
     generateProblem();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isGameActive, score]); // Changed dependency to score to trigger new problem
+  }, [isGameActive, score]);
 
   useEffect(() => {
     if (level !== 'competitive' || !isGameActive) return;
@@ -259,7 +259,8 @@ function GamePageWrapper({ params }: { params: { mode: string, level: string } }
   );
 }
 
-// This is the Server Component that correctly handles params
 export default function GamePage({ params }: { params: { mode: string, level: string } }) {
   return <GamePageWrapper params={params} />;
 }
+
+    

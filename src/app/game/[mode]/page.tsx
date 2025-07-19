@@ -109,7 +109,8 @@ function GameModeClientPage({ mode }: { mode: string }) {
   );
 }
 
-// This is the new Server Component wrapper
 export default function GameModePage({ params }: { params: { mode: string } }) {
   return <GameModeClientPage mode={params.mode} />;
 }
+
+    
