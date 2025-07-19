@@ -11,9 +11,11 @@ import Link from 'next/link';
 import { Home } from 'lucide-react';
 import React from 'react';
 import UserProfile from '@/components/UserProfile';
+import { useToast } from '@/hooks/use-toast';
 
 const GAME_DURATION = 60; // seconds
 const TEST_MODE_TIMEOUT = 5000; // 5 seconds
+const USERNAME_KEY = "mathverse-username";
 
 interface Problem {
   question: string;
@@ -50,6 +52,7 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
   const searchParams = useSearchParams();
   const limitParam = searchParams.get('limit');
   const limit = limitParam ? parseInt(limitParam, 10) : 15;
+  const { toast } = useToast();
 
   const [problem, setProblem] = useState<Problem | null>(null);
   const [score, setScore] = useState(0);
@@ -61,7 +64,7 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
   
   const nextProblemTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const testModeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   const generateProblem = useCallback(() => {
     let seed = simpleHash(`${mode}-${level}-${problemCount}-${limit}`);
     const random = () => {
@@ -194,6 +197,42 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
       if (testModeTimeoutRef.current) clearTimeout(testModeTimeoutRef.current);
     }
   }, []);
+
+  // Effect to send score when game ends
+  useEffect(() => {
+    if (!isGameActive) {
+      const sendScore = async () => {
+        const username = localStorage.getItem(USERNAME_KEY) || "Guest";
+        try {
+          const response = await fetch('http://192.168.0.119:9003/api/user', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, score }),
+          });
+
+          if (response.ok) {
+            toast({
+              title: "Score Submitted",
+              description: "Your score was sent successfully.",
+            });
+          } else {
+            throw new Error('Failed to submit score');
+          }
+        } catch (error) {
+          console.error("Error submitting score:", error);
+          toast({
+            variant: "destructive",
+            title: "Submission Failed",
+            description: "Could not send score to the server.",
+          });
+        }
+      };
+      
+      sendScore();
+    }
+  }, [isGameActive, score, toast]);
   
   const title = `${getGameTitle(mode)} - ${level === 'competitive' ? 'Competitive' : 'Test'} Level`;
 
