@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, Suspense, useRef } from 'react';
@@ -125,7 +126,7 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
     setProblem({ question, options: Array.from(options).sort(() => random() - 0.5), answer });
     setProblemCount(prev => prev + 1);
   }, [mode, level, problemCount, limit]);
-
+  
   const goToNextProblem = useCallback(() => {
      if (isGameActive) {
         generateProblem();
@@ -150,7 +151,6 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
 
     nextProblemTimeoutRef.current = setTimeout(goToNextProblem, timeoutDuration);
   }, [selectedOption, problem, goToNextProblem]);
-
 
   useEffect(() => {
     if(!isGameActive) return;
@@ -242,7 +242,7 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
     <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
       <Card className="w-full max-w-2xl">
         <CardHeader>
-          <div className="flex justify-between items-start">
+          <div className="flex justify-between items-center">
             <CardTitle className="text-2xl font-headline">{title}</CardTitle>
             <div className='flex items-center gap-4'>
                 {level === 'competitive' && (

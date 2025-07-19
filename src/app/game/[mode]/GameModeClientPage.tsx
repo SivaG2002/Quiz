@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -52,14 +53,14 @@ export default function GameModeClientPage({ mode }: { mode: string }) {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
-      <Card className="w-full max-w-2xl">
+      <Card className="w-full max-w-2xl relative">
+        <div className="absolute top-4 right-4">
+          <UserProfile />
+        </div>
         <CardHeader>
-          <div className="flex justify-between items-start">
-            <CardTitle className="text-3xl text-center font-headline">
-              {getGameTitle(mode)} Challenge
-            </CardTitle>
-            <UserProfile />
-          </div>
+          <CardTitle className="text-3xl text-center font-headline pr-12">
+            {getGameTitle(mode)} Challenge
+          </CardTitle>
           {isCustomizable && (
             <div className="pt-2">
                  <CardDescription className="text-center">
