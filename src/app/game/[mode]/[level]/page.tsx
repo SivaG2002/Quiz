@@ -122,7 +122,7 @@ function GamePage({ mode, level }: { mode: string, level: string }) {
 
   useEffect(() => {
     generateProblem();
-  }, []); 
+  }, [generateProblem]); 
 
   useEffect(() => {
     if (level !== 'competitive' || !isGameActive) return;

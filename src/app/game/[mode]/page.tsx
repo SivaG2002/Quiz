@@ -108,6 +108,7 @@ function GameModePage({ mode }: { mode: string }) {
 }
 
 
+// This is the new Server Component wrapper
 export default function GameModeLoader({ params }: { params: { mode: string } }) {
     return (
         <Suspense fallback={<main className="flex min-h-screen flex-col items-center justify-center p-8"><p>Loading...</p></main>}>
