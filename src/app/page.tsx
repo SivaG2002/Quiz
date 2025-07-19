@@ -51,7 +51,7 @@ export default function Home() {
   return (
     <div className="bg-background">
       <div className="absolute top-4 right-4 z-10">
-        <UserProfile />
+        <UserProfile showName={true} />
       </div>
       <section className="flex flex-col items-center justify-center w-full h-screen text-center relative p-4">
         <div className="flex flex-col items-center gap-6">
