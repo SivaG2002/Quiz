@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, use } from 'react';
-import { useRouter, useSearchParams, notFound } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+import { notFound, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -43,10 +43,10 @@ function simpleHash(str: string) {
 }
 
 
-function GamePage({ params, searchParams }: { params: { mode: string, level: string }, searchParams: { [key: string]: string | string[] | undefined } }) {
-  const { mode, level } = params;
-  const limitParam = searchParams?.limit;
-  const limit = typeof limitParam === 'string' ? parseInt(limitParam, 10) : 15;
+function GamePage({ mode, level }: { mode: string, level: string }) {
+  const searchParams = useSearchParams();
+  const limitParam = searchParams.get('limit');
+  const limit = limitParam ? parseInt(limitParam, 10) : 15;
 
   const [problem, setProblem] = useState<Problem | null>(null);
   const [score, setScore] = useState(0);
@@ -57,8 +57,6 @@ function GamePage({ params, searchParams }: { params: { mode: string, level: str
   const [problemCount, setProblemCount] = useState(0);
 
   const generateProblem = useCallback(() => {
-    // Use a seed to make problems 'random but predictable' based on mode, level and problem count
-    // This prevents hydration errors from Math.random()
     let seed = simpleHash(`${mode}-${level}-${problemCount}-${limit}`);
     const random = () => {
         let x = Math.sin(seed++) * 10000;
@@ -110,7 +108,6 @@ function GamePage({ params, searchParams }: { params: { mode: string, level: str
     options.add(answer);
     while (options.size < 4) {
       const offset = Math.floor(random() * 10) - 5;
-      // Ensure offset is not zero
       const randomOffset = offset === 0 ? 1 : offset;
       const option = answer + randomOffset;
       if (option >= 0) {
@@ -125,7 +122,7 @@ function GamePage({ params, searchParams }: { params: { mode: string, level: str
 
   useEffect(() => {
     generateProblem();
-  }, []); // Only run once on mount
+  }, []); 
 
   useEffect(() => {
     if (level !== 'competitive' || !isGameActive) return;
@@ -253,11 +250,11 @@ function GamePage({ params, searchParams }: { params: { mode: string, level: str
   );
 }
 
-// This is a new Server Component wrapper
-export default function GamePageLoader(props: any) {
+// This is the new Server Component wrapper
+export default function GamePageLoader({ params }: { params: { mode: string, level: string } }) {
   return (
     <Suspense fallback={<main className="flex min-h-screen flex-col items-center justify-center p-8"><p>Loading...</p></main>}>
-        <GamePage {...props} />
+        <GamePage mode={params.mode} level={params.level} />
     </Suspense>
   )
 }

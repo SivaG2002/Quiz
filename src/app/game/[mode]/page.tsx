@@ -33,8 +33,7 @@ function getGameTitle(mode: string) {
   }
 }
 
-function GameModePage({ params }: { params: { mode: string } }) {
-  const { mode } = params;
+function GameModePage({ mode }: { mode: string }) {
   const [limit, setLimit] = useState(15);
 
   if (!validModes.includes(mode)) {
@@ -109,10 +108,10 @@ function GameModePage({ params }: { params: { mode: string } }) {
 }
 
 
-export default function GameModeLoader(props: any) {
+export default function GameModeLoader({ params }: { params: { mode: string } }) {
     return (
         <Suspense fallback={<main className="flex min-h-screen flex-col items-center justify-center p-8"><p>Loading...</p></main>}>
-            <GameModePage {...props} />
+            <GameModePage mode={params.mode} />
         </Suspense>
     )
 }
