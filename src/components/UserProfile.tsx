@@ -14,8 +14,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Settings } from "lucide-react";
+import { User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const USERNAME_KEY = "mathverse-username";
 
@@ -26,6 +32,7 @@ export default function UserProfile() {
   const { toast } = useToast();
 
   useEffect(() => {
+    // This code runs only on the client, so localStorage is safe to use.
     const storedUsername = localStorage.getItem(USERNAME_KEY);
     if (storedUsername) {
       setUsername(storedUsername);
@@ -85,6 +92,7 @@ export default function UserProfile() {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               className="col-span-3"
+              autoComplete="name"
             />
           </div>
         </div>
@@ -95,13 +103,3 @@ export default function UserProfile() {
     </Dialog>
   );
 }
-
-// Since UserProfile uses Tooltip, we need to wrap it with the providers
-// ShadCN tooltips are a bit verbose to set up
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-
