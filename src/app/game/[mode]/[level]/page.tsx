@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, use } from 'react';
+import { useRouter, useSearchParams, notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -42,7 +42,7 @@ function simpleHash(str: string) {
 }
 
 
-function GamePage({ mode, level }: { mode: string; level: string }) {
+function GamePage({ mode, level, limit }: { mode: string; level: string, limit: number }) {
   const [problem, setProblem] = useState<Problem | null>(null);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
@@ -54,7 +54,7 @@ function GamePage({ mode, level }: { mode: string; level: string }) {
   const generateProblem = useCallback(() => {
     // Use a seed to make problems 'random but predictable' based on mode, level and problem count
     // This prevents hydration errors from Math.random()
-    let seed = simpleHash(`${mode}-${level}-${problemCount}`);
+    let seed = simpleHash(`${mode}-${level}-${problemCount}-${limit}`);
     const random = () => {
         let x = Math.sin(seed++) * 10000;
         return x - Math.floor(x);
@@ -62,15 +62,18 @@ function GamePage({ mode, level }: { mode: string; level: string }) {
 
     let question = '';
     let answer = 0;
-    let num1 = Math.floor(random() * 20) + 1;
-    let num2 = Math.floor(random() * 20) + 1;
+    let num1: number, num2: number;
 
     switch (mode) {
       case 'addition':
+        num1 = Math.floor(random() * 20) + 1;
+        num2 = Math.floor(random() * 20) + 1;
         answer = num1 + num2;
         question = `${num1} + ${num2} = ?`;
         break;
       case 'subtraction':
+        num1 = Math.floor(random() * 20) + 1;
+        num2 = Math.floor(random() * 20) + 1;
         if (num1 < num2) [num1, num2] = [num2, num1];
         answer = num1 - num2;
         question = `${num1} - ${num2} = ?`;
@@ -82,17 +85,17 @@ function GamePage({ mode, level }: { mode: string; level: string }) {
         question = `${num1} × ${num2} = ?`;
         break;
       case 'squared':
-        num1 = Math.floor(random() * 15) + 2;
+        num1 = Math.floor(random() * (limit - 1)) + 2;
         answer = num1 * num1;
         question = `${num1}² = ?`;
         break;
       case 'cubes':
-        num1 = Math.floor(random() * 10) + 2;
+        num1 = Math.floor(random() * (limit - 1)) + 2;
         answer = num1 * num1 * num1;
         question = `${num1}³ = ?`;
         break;
       case 'square-roots':
-        num1 = Math.floor(random() * 15) + 2;
+        num1 = Math.floor(random() * (limit - 1)) + 2;
         answer = num1;
         question = `√${num1*num1} = ?`;
         break;
@@ -101,15 +104,18 @@ function GamePage({ mode, level }: { mode: string; level: string }) {
     const options = new Set<number>();
     options.add(answer);
     while (options.size < 4) {
-      const option = answer + (Math.floor(random() * 10) - 5);
-      if (option !== answer && option >= 0) {
+      const offset = Math.floor(random() * 10) - 5;
+      // Ensure offset is not zero
+      const randomOffset = offset === 0 ? 1 : offset;
+      const option = answer + randomOffset;
+      if (option >= 0) {
         options.add(option);
       }
     }
 
     setProblem({ question, options: Array.from(options).sort(() => random() - 0.5), answer });
     setProblemCount(prev => prev + 1);
-  }, [mode, level, problemCount]);
+  }, [mode, level, problemCount, limit]);
 
 
   useEffect(() => {
@@ -236,23 +242,32 @@ function GamePage({ mode, level }: { mode: string; level: string }) {
 }
 
 // This is a new Server Component wrapper
-import { use, Suspense } from 'react';
-import { notFound } from 'next/navigation';
+import React, { Suspense } from 'react';
 
 const validModes = ['addition', 'subtraction', 'multiplication', 'squared', 'cubes', 'square-roots'];
 const validLevels = ['test', 'competitive'];
 
-export default function GamePageLoader({ params }: { params: Promise<{ mode: string; level: string }> }) {
-  const resolvedParams = use(params);
-  const { mode, level } = resolvedParams;
+function GamePageWrapper({ params, searchParams }: { params: { mode: string, level: string }, searchParams: { [key: string]: string | string[] | undefined }}) {
+  const { mode, level } = params;
 
   if (!validModes.includes(mode) || !validLevels.includes(level)) {
     notFound();
   }
+
+  const limitParam = searchParams?.limit;
+  const limit = typeof limitParam === 'string' ? parseInt(limitParam, 10) : 15;
+
+  return <GamePage mode={mode} level={level} limit={isNaN(limit) ? 15 : limit} />;
+}
+
+
+export default function GamePageLoader(props: any) {
+  const params = use(Promise.resolve(props.params));
+  const searchParams = use(Promise.resolve(props.searchParams));
   
   return (
     <Suspense fallback={<main className="flex min-h-screen flex-col items-center justify-center p-8"><p>Loading...</p></main>}>
-        <GamePage mode={mode} level={level} />
+        <GamePageWrapper params={params} searchParams={searchParams} />
     </Suspense>
   )
 }

@@ -1,7 +1,13 @@
+
+"use client";
+
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { notFound } from 'next/navigation';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { notFound, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Slider } from '@/components/ui/slider';
+import { cn } from '@/lib/utils';
 
 const validModes = [
   'addition',
@@ -12,30 +18,37 @@ const validModes = [
   'square-roots',
 ];
 
+const customizableModes = ['squared', 'cubes', 'square-roots'];
+
 function getGameTitle(mode: string) {
   switch (mode) {
-    case 'addition':
-      return 'Addition';
-    case 'subtraction':
-      return 'Subtraction';
-    case 'multiplication':
-      return 'Multiplication';
-    case 'squared':
-      return 'Squared';
-    case 'cubes':
-      return 'Cubes';
-    case 'square-roots':
-      return 'Square Roots';
-    default:
-      return 'Game';
+    case 'addition': return 'Addition';
+    case 'subtraction': return 'Subtraction';
+    case 'multiplication': return 'Multiplication';
+    case 'squared': return 'Squared';
+    case 'cubes': return 'Cubes';
+    case 'square-roots': return 'Square Roots';
+    default: return 'Game';
   }
 }
 
 export default function GameModePage({ params }: { params: { mode: string } }) {
   const { mode } = params;
+  const [limit, setLimit] = useState(15);
+  const router = useRouter();
 
   if (!validModes.includes(mode)) {
     notFound();
+  }
+
+  const isCustomizable = customizableModes.includes(mode);
+  
+  const getLevelHref = (level: 'test' | 'competitive') => {
+    let href = `/game/${mode}/${level}`;
+    if (isCustomizable) {
+        href += `?limit=${limit}`;
+    }
+    return href;
   }
 
   return (
@@ -45,12 +58,31 @@ export default function GameModePage({ params }: { params: { mode: string } }) {
           <CardTitle className="text-3xl text-center font-headline">
             {getGameTitle(mode)} Challenge
           </CardTitle>
+          {isCustomizable && (
+             <CardDescription className="text-center pt-2">
+                Use the slider to set the maximum number for the problems.
+             </CardDescription>
+          )}
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center gap-8 py-8">
-            <h2 className="text-2xl font-semibold text-muted-foreground">Choose a Level</h2>
+             {isCustomizable && (
+                <div className="w-full max-w-sm flex flex-col items-center gap-4">
+                    <Slider
+                        defaultValue={[limit]}
+                        min={5}
+                        max={50}
+                        step={1}
+                        onValueChange={(value) => setLimit(value[0])}
+                    />
+                    <div className="text-xl font-bold text-primary">{limit}</div>
+                </div>
+             )}
+            <h2 className={cn("text-2xl font-semibold text-muted-foreground", isCustomizable ? "mt-4" : "")}>
+                Choose a Level
+            </h2>
             <div className="flex flex-col sm:flex-row gap-6">
-                <Link href={`/game/${mode}/test`} passHref>
+                <Link href={getLevelHref('test')} passHref>
                     <Button 
                         variant="outline" 
                         className="w-48 h-16 text-xl"
@@ -59,7 +91,7 @@ export default function GameModePage({ params }: { params: { mode: string } }) {
                         Test Level
                     </Button>
                 </Link>
-                <Link href={`/game/${mode}/competitive`} passHref>
+                <Link href={getLevelHref('competitive')} passHref>
                     <Button 
                         variant="default" 
                         className="w-48 h-16 text-xl shadow-lg hover:shadow-primary/40"
