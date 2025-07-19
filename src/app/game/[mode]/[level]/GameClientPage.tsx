@@ -204,7 +204,8 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
       const sendScore = async () => {
         const username = localStorage.getItem(USERNAME_KEY) || "Guest";
         try {
-          const response = await fetch('http://192.168.0.119:9003/api/user', {
+          // Use the internal API proxy route
+          const response = await fetch('/api/submit-score', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -218,7 +219,8 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
               description: "Your score was sent successfully.",
             });
           } else {
-            throw new Error('Failed to submit score');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to submit score');
           }
         } catch (error) {
           console.error("Error submitting score:", error);
