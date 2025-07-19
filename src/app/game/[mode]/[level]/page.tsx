@@ -122,6 +122,7 @@ function GameClientPage({ mode, level }: { mode: string, level: string }) {
   useEffect(() => {
     if(!isGameActive) return;
     generateProblem();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isGameActive, score]); // Changed dependency to score to trigger new problem
 
   useEffect(() => {

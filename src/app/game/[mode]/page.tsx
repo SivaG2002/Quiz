@@ -13,7 +13,6 @@ import React from 'react';
 const validModes = [
   'addition',
   'subtraction',
-
   'multiplication',
   'squared',
   'cubes',
