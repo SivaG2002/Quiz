@@ -1,5 +1,7 @@
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 
 const validModes = [
   'addition',
@@ -29,7 +31,7 @@ function getGameTitle(mode: string) {
   }
 }
 
-export default function GamePage({ params }: { params: { mode: string } }) {
+export default function GameModePage({ params }: { params: { mode: string } }) {
   const { mode } = params;
 
   if (!validModes.includes(mode)) {
@@ -45,10 +47,28 @@ export default function GamePage({ params }: { params: { mode: string } }) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col items-center justify-center h-64">
-            <p className="text-muted-foreground">
-              Game screen for {getGameTitle(mode).toLowerCase()} will be here.
-            </p>
+          <div className="flex flex-col items-center justify-center gap-8 py-8">
+            <h2 className="text-2xl font-semibold text-muted-foreground">Choose a Level</h2>
+            <div className="flex flex-col sm:flex-row gap-6">
+                <Link href={`/game/${mode}/test`} passHref>
+                    <Button 
+                        variant="outline" 
+                        className="w-48 h-16 text-xl"
+                        aria-label="Start Test Level"
+                    >
+                        Test Level
+                    </Button>
+                </Link>
+                <Link href={`/game/${mode}/competitive`} passHref>
+                    <Button 
+                        variant="default" 
+                        className="w-48 h-16 text-xl shadow-lg hover:shadow-primary/40"
+                        aria-label="Start Competitive Level"
+                    >
+                        Competitive Level
+                    </Button>
+                </Link>
+            </div>
           </div>
         </CardContent>
       </Card>

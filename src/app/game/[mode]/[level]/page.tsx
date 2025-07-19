@@ -1,0 +1,247 @@
+"use client";
+
+import { useState, useEffect, useCallback } from 'react';
+import { notFound, useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
+import Link from 'next/link';
+import { Home } from 'lucide-react';
+
+const validModes = ['addition', 'subtraction', 'multiplication', 'squared', 'cubes', 'square-roots'];
+const validLevels = ['test', 'competitive'];
+
+const GAME_DURATION = 60; // seconds
+
+interface Problem {
+  question: string;
+  options: number[];
+  answer: number;
+}
+
+function getGameTitle(mode: string) {
+    switch (mode) {
+      case 'addition': return 'Addition';
+      case 'subtraction': return 'Subtraction';
+      case 'multiplication': return 'Multiplication';
+      case 'squared': return 'Squared';
+      case 'cubes': return 'Cubes';
+      case 'square-roots': return 'Square Roots';
+      default: return '';
+    }
+}
+
+// A simple non-crypto hash for seeding randomness
+function simpleHash(str: string) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = (hash << 5) - hash + char;
+        hash |= 0; // Convert to 32bit integer
+    }
+    return hash;
+}
+
+
+export default function GamePage({ params }: { params: { mode: string; level: string } }) {
+  const { mode, level } = params;
+  const router = useRouter();
+
+  const [problem, setProblem] = useState<Problem | null>(null);
+  const [score, setScore] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
+  const [isGameActive, setIsGameActive] = useState(true);
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const [problemCount, setProblemCount] = useState(0);
+
+  const generateProblem = useCallback(() => {
+    // Use a seed to make problems 'random but predictable' based on mode, level and problem count
+    // This prevents hydration errors from Math.random()
+    const seed = simpleHash(`${mode}-${level}-${problemCount}`);
+    const random = () => {
+        let x = Math.sin(seed + problemCount) * 10000;
+        return x - Math.floor(x);
+    };
+
+    let question = '';
+    let answer = 0;
+    let num1 = Math.floor(random() * 20) + 1;
+    let num2 = Math.floor(random() * 20) + 1;
+
+    switch (mode) {
+      case 'addition':
+        answer = num1 + num2;
+        question = `${num1} + ${num2} = ?`;
+        break;
+      case 'subtraction':
+        if (num1 < num2) [num1, num2] = [num2, num1];
+        answer = num1 - num2;
+        question = `${num1} - ${num2} = ?`;
+        break;
+      case 'multiplication':
+        num1 = Math.floor(random() * 10) + 2;
+        num2 = Math.floor(random() * 10) + 2;
+        answer = num1 * num2;
+        question = `${num1} × ${num2} = ?`;
+        break;
+      case 'squared':
+        num1 = Math.floor(random() * 15) + 2;
+        answer = num1 * num1;
+        question = `${num1}² = ?`;
+        break;
+      case 'cubes':
+        num1 = Math.floor(random() * 10) + 2;
+        answer = num1 * num1 * num1;
+        question = `${num1}³ = ?`;
+        break;
+      case 'square-roots':
+        num1 = Math.floor(random() * 15) + 2;
+        answer = num1;
+        question = `√${num1*num1} = ?`;
+        break;
+    }
+
+    const options = new Set<number>();
+    options.add(answer);
+    while (options.size < 4) {
+      const option = answer + (Math.floor(random() * 10) - 5);
+      if (option !== answer && option >= 0) {
+        options.add(option);
+      }
+    }
+
+    setProblem({ question, options: Array.from(options).sort(() => random() - 0.5), answer });
+    setProblemCount(prev => prev + 1);
+  }, [mode, level, problemCount]);
+
+
+  useEffect(() => {
+    if (validModes.includes(mode) && validLevels.includes(level)) {
+        generateProblem();
+    }
+  }, [mode, level]); // Only run once on mount if mode/level are valid
+
+  useEffect(() => {
+    if (level !== 'competitive' || !isGameActive) return;
+
+    if (timeLeft <= 0) {
+      setIsGameActive(false);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft, level, isGameActive]);
+
+  const handleAnswer = (option: number) => {
+    if (selectedOption !== null) return;
+
+    setSelectedOption(option);
+    const correct = option === problem!.answer;
+    setIsCorrect(correct);
+
+    if (correct) {
+      setScore(score + 1);
+    }
+
+    setTimeout(() => {
+        setSelectedOption(null);
+        setIsCorrect(null);
+        if (isGameActive) {
+            generateProblem();
+        }
+    }, correct ? 500 : 1000);
+  };
+  
+  if (!validModes.includes(mode) || !validLevels.includes(level)) {
+    notFound();
+  }
+
+  const title = `${getGameTitle(mode)} - ${level === 'competitive' ? 'Competitive' : 'Test'} Level`;
+
+  if (!isGameActive) {
+    return (
+        <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
+            <Card className="w-full max-w-2xl text-center">
+                <CardHeader>
+                    <CardTitle className="text-3xl font-headline">Game Over!</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <p className="text-xl text-muted-foreground">You scored:</p>
+                    <p className="text-6xl font-bold text-primary">{score}</p>
+                    <div className="flex justify-center gap-4">
+                        <Button onClick={() => window.location.reload()}>Play Again</Button>
+                        <Button variant="outline" asChild>
+                           <Link href="/">
+                                <Home className="mr-2" /> Go Home
+                           </Link>
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+        </main>
+    )
+  }
+
+  if (!problem) {
+    return (
+        <main className="flex min-h-screen flex-col items-center justify-center p-8">
+            <p>Loading...</p>
+        </main>
+    );
+  }
+
+  const timerColor = timeLeft <= 10 ? 'border-red-500' : 'border-green-500';
+
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
+      <Card className="w-full max-w-2xl">
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-2xl font-headline">{title}</CardTitle>
+            {level === 'competitive' && (
+                <div className={cn("text-2xl font-bold border-4 rounded-full size-20 flex items-center justify-center transition-colors", timerColor)}>
+                    {timeLeft}
+                </div>
+            )}
+          </div>
+          {level === 'competitive' && (
+            <Progress value={(timeLeft / GAME_DURATION) * 100} className="mt-2" />
+          )}
+        </CardHeader>
+        <CardContent className="flex flex-col items-center justify-center space-y-8 min-h-[20rem]">
+            <div className="text-5xl font-bold tracking-wider text-center">
+                {problem.question}
+            </div>
+            <div className="grid grid-cols-2 gap-4 w-full max-w-md">
+                {problem.options.map((option) => {
+                    const isSelected = selectedOption === option;
+                    const isTheCorrectAnswer = problem.answer === option;
+
+                    const buttonColor = isSelected
+                        ? (isCorrect ? 'bg-green-500/80 border-green-400' : 'bg-red-500/80 border-red-400')
+                        : (selectedOption !== null && isTheCorrectAnswer ? 'bg-green-500/80 border-green-400' : 'bg-secondary');
+
+                    return (
+                        <Button
+                            key={option}
+                            onClick={() => handleAnswer(option)}
+                            disabled={selectedOption !== null}
+                            className={cn("h-24 text-4xl font-bold transform transition-all", buttonColor)}
+                        >
+                            {option}
+                        </Button>
+                    );
+                })}
+            </div>
+             <div className="text-xl font-semibold text-primary">Score: {score}</div>
+        </CardContent>
+      </Card>
+    </main>
+  );
+}
