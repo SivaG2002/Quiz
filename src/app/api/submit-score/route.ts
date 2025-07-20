@@ -2,8 +2,8 @@
 import { NextResponse } from 'next/server';
 
 // Use an environment variable for the target URL.
-// The fallback is a non-functional placeholder to make it clear the variable must be set.
-const TARGET_URL = process.env.SCORE_SERVER_URL || 'https://4a3dae1c2cd1.ngrok-free.app/api/score';
+// The fallback is your permanent public server address.
+const TARGET_URL = process.env.SCORE_SERVER_URL || 'http://wintr.wisp.uno:12762/api/score';
 
 /**
  * API endpoint to proxy score submission.
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   try {
     // Check if the environment variable is set. If not, log a helpful error.
     if (!process.env.SCORE_SERVER_URL) {
-        console.warn("WARNING: SCORE_SERVER_URL environment variable is not set.");
+        console.warn("INFO: SCORE_SERVER_URL environment variable is not set.");
         console.warn(`Falling back to hardcoded URL: ${TARGET_URL}`);
     }
 
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'user_id, username, and score are required' }, { status: 400 });
     }
 
-    // Forward the request to the target server (your Flask app via ngrok)
+    // Forward the request to the target server
     const externalResponse = await fetch(TARGET_URL, {
         method: 'POST',
         headers: {
