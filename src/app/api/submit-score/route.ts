@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 // Use an environment variable for the target URL.
 // The fallback is a non-functional placeholder to make it clear the variable must be set.
-const TARGET_URL = process.env.SCORE_SERVER_URL || 'http://your-ngrok-url-is-not-set.local';
+const TARGET_URL = process.env.SCORE_SERVER_URL || 'https://4a3dae1c2cd1.ngrok-free.app/api/score';
 
 /**
  * API endpoint to proxy score submission.
@@ -13,9 +13,8 @@ export async function POST(request: Request) {
   try {
     // Check if the environment variable is set. If not, log a helpful error.
     if (!process.env.SCORE_SERVER_URL) {
-        console.error("FATAL: SCORE_SERVER_URL environment variable is not set.");
-        console.error("The app will not be able to submit scores.");
-        return NextResponse.json({ error: "Score server is not configured on the backend. The SCORE_SERVER_URL environment variable is missing." }, { status: 503 }); // 503 Service Unavailable
+        console.warn("WARNING: SCORE_SERVER_URL environment variable is not set.");
+        console.warn(`Falling back to hardcoded URL: ${TARGET_URL}`);
     }
 
     const body = await request.json();
