@@ -1,9 +1,9 @@
 
 import { NextResponse } from 'next/server';
 
-// Use an environment variable for the target URL, with a fallback for local development.
-// This should point to your ngrok tunnel for the Flask server.
-const TARGET_URL = process.env.SCORE_SERVER_URL || 'http://127.0.0.1:5000/api/score';
+// Use an environment variable for the target URL.
+// The fallback is a non-functional placeholder to make it clear the variable must be set.
+const TARGET_URL = process.env.SCORE_SERVER_URL || 'http://your-ngrok-url-is-not-set.local';
 
 /**
  * API endpoint to proxy score submission.
@@ -11,6 +11,13 @@ const TARGET_URL = process.env.SCORE_SERVER_URL || 'http://127.0.0.1:5000/api/sc
  */
 export async function POST(request: Request) {
   try {
+    // Check if the environment variable is set. If not, log a helpful error.
+    if (!process.env.SCORE_SERVER_URL) {
+        console.error("FATAL: SCORE_SERVER_URL environment variable is not set.");
+        console.error("The app will not be able to submit scores.");
+        return NextResponse.json({ error: "Score server is not configured on the backend. The SCORE_SERVER_URL environment variable is missing." }, { status: 503 }); // 503 Service Unavailable
+    }
+
     const body = await request.json();
     const { user_id, username, score } = body;
 
@@ -41,6 +48,6 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error('API Proxy Error:', error);
     // This catches network errors, e.g., if the target server is down
-    return NextResponse.json({ error: `Failed to connect to the score server at ${TARGET_URL}. Is it running?` }, { status: 502 }); // 502 Bad Gateway
+    return NextResponse.json({ error: `Failed to connect to the score server at ${TARGET_URL}. Is it running and is the URL correct?` }, { status: 502 }); // 502 Bad Gateway
   }
 }
