@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 const GAME_DURATION = 60; // seconds
 const TEST_MODE_TIMEOUT = 5000; // 5 seconds
 const USERNAME_KEY = "mathverse-username";
+const USERID_KEY = "mathverse-userid";
 
 interface Problem {
   question: string;
@@ -203,6 +204,18 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
     if (!isGameActive) {
       const sendScore = async () => {
         const username = localStorage.getItem(USERNAME_KEY) || "Guest";
+        const user_id = localStorage.getItem(USERID_KEY);
+
+        if (!user_id) {
+            console.error("No user_id found, cannot submit score.");
+            toast({
+                variant: "destructive",
+                title: "Submission Failed",
+                description: "User ID not found. Please start the game from Discord.",
+            });
+            return;
+        }
+
         try {
           // Use the internal API proxy route
           const response = await fetch('/api/submit-score', {
@@ -210,7 +223,7 @@ function GameClientContent({ mode, level }: { mode: string, level: string }) {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ username, score }),
+            body: JSON.stringify({ user_id, username, score }),
           });
           
           const responseData = await response.json();
@@ -346,5 +359,3 @@ export default function GameClientPage({ mode, level }: { mode: string, level: s
     </Suspense>
   );
 }
-
-    

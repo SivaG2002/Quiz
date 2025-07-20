@@ -2,7 +2,8 @@
 import { NextResponse } from 'next/server';
 
 // Use an environment variable for the target URL, with a fallback for local development.
-const TARGET_URL = process.env.SCORE_SERVER_URL || 'http://127.0.0.1:9003/api/user';
+// This should point to your ngrok tunnel for the Flask server.
+const TARGET_URL = process.env.SCORE_SERVER_URL || 'http://127.0.0.1:5000/api/score';
 
 /**
  * API endpoint to proxy score submission.
@@ -11,19 +12,19 @@ const TARGET_URL = process.env.SCORE_SERVER_URL || 'http://127.0.0.1:9003/api/us
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { username, score } = body;
+    const { user_id, username, score } = body;
 
-    if (username === undefined || score === undefined) {
-      return NextResponse.json({ error: 'Username and score are required' }, { status: 400 });
+    if (user_id === undefined || username === undefined || score === undefined) {
+      return NextResponse.json({ error: 'user_id, username, and score are required' }, { status: 400 });
     }
 
-    // Forward the request to the target server
+    // Forward the request to the target server (your Flask app via ngrok)
     const externalResponse = await fetch(TARGET_URL, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, score }),
+        body: JSON.stringify({ user_id, username, score }),
     });
 
     if (!externalResponse.ok) {

@@ -22,15 +22,18 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
 
 const USERNAME_KEY = "mathverse-username";
+const USERID_KEY = "mathverse-userid";
 const DEFAULT_USERNAME = "Guest";
 
-export default function UserProfile({ showName = false }: { showName?: boolean }) {
+function UserProfileContent({ showName = false }: { showName?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const [username, setUsername] = useState(DEFAULT_USERNAME);
   const [inputValue, setInputValue] = useState("");
   const { toast } = useToast();
+  const searchParams = useSearchParams();
 
   const updateUsernameFromStorage = () => {
     const storedUsername = localStorage.getItem(USERNAME_KEY);
@@ -40,6 +43,17 @@ export default function UserProfile({ showName = false }: { showName?: boolean }
   };
   
   useEffect(() => {
+    // Check for username and id from URL params on initial load
+    const urlUser = searchParams.get('user');
+    const urlId = searchParams.get('id');
+
+    if (urlUser) {
+        localStorage.setItem(USERNAME_KEY, urlUser);
+    }
+    if (urlId) {
+        localStorage.setItem(USERID_KEY, urlId);
+    }
+
     updateUsernameFromStorage();
     
     // Listen for changes to localStorage from other tabs/windows
@@ -55,6 +69,7 @@ export default function UserProfile({ showName = false }: { showName?: boolean }
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSave = () => {
@@ -141,4 +156,13 @@ export default function UserProfile({ showName = false }: { showName?: boolean }
         {showName && <span className="text-sm text-muted-foreground font-semibold">{username}</span>}
     </div>
   );
+}
+
+// Wrap with Suspense because useSearchParams requires it.
+export default function UserProfile(props: { showName?: boolean }) {
+    return (
+        <React.Suspense fallback={<div>Loading...</div>}>
+            <UserProfileContent {...props} />
+        </React.Suspense>
+    )
 }
