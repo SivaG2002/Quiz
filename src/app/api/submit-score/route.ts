@@ -1,7 +1,8 @@
 
 import { NextResponse } from 'next/server';
 
-const TARGET_URL = 'http://192.168.0.119:9003/api/user';
+// Use an environment variable for the target URL, with a fallback for local development.
+const TARGET_URL = process.env.SCORE_SERVER_URL || 'http://127.0.0.1:9003/api/user';
 
 /**
  * API endpoint to proxy score submission.
@@ -39,6 +40,6 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error('API Proxy Error:', error);
     // This catches network errors, e.g., if the target server is down
-    return NextResponse.json({ error: 'Failed to connect to the score server.' }, { status: 502 }); // 502 Bad Gateway
+    return NextResponse.json({ error: `Failed to connect to the score server at ${TARGET_URL}. Is it running?` }, { status: 502 }); // 502 Bad Gateway
   }
 }
